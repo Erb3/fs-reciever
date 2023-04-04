@@ -24,12 +24,25 @@ while true do
     local event, user, command, args = os.pullEvent("command")
 
     if command == commandName then
-        if #args == 0 then
+        if (#args == 0) or (args[1] == "help") then
             chatbox.tell(user, "FindShop is a command/service to find shops with a certain item and display their prices using ShopSync." , botName, nil)
         elseif #args > 1 then
             chatbox.tell(user, "**Error!** FindShop does not currently support multiple search parameters.", botNameError,  nil)
         elseif _G.shops == {} then
             chatbox.tell(user, "**Error!** FindShop was unable to find any shops.", botNameError, nil, "format")
+        elseif args[1] == "list" then
+            local printResults = ""
+
+            for i = 1, #shops do
+                local shopLocation = "an unknown location"
+                if shops[i].info.location then
+                    shopLocation = shops[i].info.location.coordinates[1] .. ", " .. shops[i].info.location.coordinates[3]
+                end
+
+                printResults = printResults .. "**" .. shops[i].info.name .. "** at " .. shopLocation
+            end
+
+            chatbox.tell(user, "FindShop found the following shops: " .. printResults, botName, nil)
         else
             print("[DEBUG] Searching for " .. args[1] .. "...")
             results = {}
