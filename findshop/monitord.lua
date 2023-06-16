@@ -1,6 +1,6 @@
 --[[
     FindShop Monitor Daemon
-    Copyright (C) 2023  slimit75
+    Copyright (C) 2023 slimit75
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ local modem = peripheral.wrap("top")
 modem.open(9773)
 
 -- Loop to check for shops continously
+findshop.infoLog("monitord", "Started monitord")
 while true do
     local event, side, channel, replyChannel, message, distance = os.pullEvent("modem_message")
 
@@ -57,7 +58,7 @@ while true do
         -- Add (updated?) shop to cache
         if index == nil then
             table.insert(findshop.shops, message)
-            print("Found new shop! " .. message.info.name)
+            findshop.infoLog("monitord", "Found new shop! " .. message.info.name)
         else
             findshop.shops[index] = message
         end
