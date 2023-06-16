@@ -20,6 +20,18 @@
 local modem = peripheral.wrap("top")
 modem.open(9773)
 
+-- Read cache, if it exists
+local CACHE_FP = "/findshop/cache.json"
+
+if fs.exists(CACHE_FP) then
+    local tempFile = fs.open(CACHE_FP, "r")
+    local cache = tempFile.readAll()
+    tempFile.close()
+
+    findshop.shops = textutils.unserializeJSON(cache)
+    findshop.infoLog("monitord", "Restored " .. #findshop.shops .. " shops from cache.")
+end
+
 -- Loop to check for shops continously
 findshop.infoLog("monitord", "Started monitord")
 while true do
@@ -59,6 +71,11 @@ while true do
         if index == nil then
             table.insert(findshop.shops, message)
             findshop.infoLog("monitord", "Found new shop! " .. message.info.name)
+
+            -- Write cache
+            local tempFile = fs.open(CACHE_FP, "w")
+            tempFile.write(textutils.serializeJSON(findshop.shops))
+            tempFile.close()
         else
             findshop.shops[index] = message
         end

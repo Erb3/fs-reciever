@@ -49,6 +49,7 @@ local fs_env = {
     io = io,
     print = print,
     os = os,
+    fs = fs,
     chatbox = chatbox,
     peripheral = peripheral,
     findshop = {
