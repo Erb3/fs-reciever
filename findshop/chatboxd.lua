@@ -44,15 +44,17 @@ while true do
             local printResults = ""
 
             for i = 1, #findshop.shops do
-                local shopLocation = "an unknown location"
-                if findshop.shops[i].info.location then
-                    shopLocation = findshop.shops[i].info.location.coordinates[1] .. ", " .. shops[i].info.location.coordinates[3]
+                local shopLocation = "Unknown"
+                if (findshop.shops[i].info.location) then
+                    shopLocation = findshop.shops[i].info.location.coordinates[1] .. ", " .. findshop.shops[i].info.location.coordinates[3]
                 end
 
-                printResults = printResults .. "**" .. findshop.shops[i].info.name .. "** at " .. shopLocation
+                printResults = printResults .. "\n**" .. findshop.shops[i].info.name .. "** at `" .. shopLocation .. "`"
             end
 
-            chatbox.tell(user, "FindShop found the following shops: " .. printResults, BOT_NAME, nil)
+            chatbox.tell(user, "FindShop found the following shops: \n" .. printResults, BOT_NAME, nil)
+        elseif args[1] == "stats" then
+            chatbox.tell(user, "We are currently tracking `" .. #findshop.shops .. "` shops, with `" .. #findshop.uniqueItems .. "` unique items.", BOT_NAME, nil)
         else
             print("[DEBUG] Searching for " .. args[1] .. "...")
             results = {}
@@ -68,11 +70,16 @@ while true do
                             end
                         end
 
+                        local shopLocation = "Unknown"
+                        if findshop.shops[i].info.location then
+                            shopLocation = findshop.shops[i].info.location.coordinates[1] .. ", " .. findshop.shops[i].info.location.coordinates[3]
+                        end
+
                         table.insert(results, {
                             shop = {
                                 name = findshop.shops[i].info.name,
                                 owner = findshop.shops[i].info.owner,
-                                location = "x" .. findshop.shops[i].info.location.coordinates[1] .. " y" .. findshop.shops[i].info.location.coordinates[2] .. " z" .. findshop.shops[i].info.location.coordinates[3]
+                                location = shopLocation
                             },
                             price = priceKST,
                             stock = findshop.shops[i].items[z].stock

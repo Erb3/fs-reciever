@@ -20,10 +20,6 @@
 local modem = peripheral.wrap("top")
 modem.open(9773)
 
-function checkIfExists(message)
-    
-end
-
 -- Loop to check for shops continously
 while true do
     local event, side, channel, replyChannel, message, distance = os.pullEvent("modem_message")
@@ -33,7 +29,7 @@ while true do
         -- Check to see if this shop already exists in the cache
         index = nil
         for i, shop in ipairs(findshop.shops) do
-            if (shop.info.location) then
+            if (message.info.location) and (shop.info.location) then
                 local coord = shop.info.location.coordinates
                 local scannedCoord = message.info.location.coordinates
 
@@ -45,7 +41,7 @@ while true do
                     index = i
                     break
                 end
-            else 
+            else
                 if (shop.info.name == message.info.name) then
                     if (shop.info.owner) then
                         if (shop.info.owner == message.info.owner) then
