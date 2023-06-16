@@ -30,75 +30,77 @@ function arrayContains(array, value)
     return false
 end
 
+function genCoords(location)
+    local shopLocation = "Unknown"
+    if (location) then
+        if (location.coordinates) then
+            shopLocation = location.coordinates[1] .. ", " .. location.coordinates[3]
+        elseif (location.description) then
+            shopLocation = "'" .. location.description .. "'"
+        end
+    end
+
+    return shopLocation
+end
+
 while true do
     local event, user, command, args = os.pullEvent("command")
 
     if arrayContains(aliases, command) then
         if (#args == 0) or (args[1] == "help") then
-            chatbox.tell(user, "FindShop is a service to locate any shops buying or selling an item. It won't find all shops though, so read [here](" .. HELP_LINK .. ") about how FindShop works and how shop owners can get their shops added." , BOT_NAME, nil)
+            chatbox.tell(user, "FindShop is a service to locate any shops buying or selling an item. We have a few subcommands, too: \n`\\fs list` - List detected shops\n`\\fs stats` - Statistics (currently only shop count)\n`\\fs <item>` - Finds *<item>*" , BOT_NAME, nil)
         elseif #args > 1 then
             chatbox.tell(user, "**Error!** FindShop does not currently support multiple search parameters.", BOT_NAME,  nil)
         elseif findshop.shops == {} then
-            chatbox.tell(user, "**Error!** FindShop was unable to find any shops. Read [here](" .. HELP_LINK .. ") about why this may be the case.", BOT_NAME, nil, "format")
+            chatbox.tell(user, "**Error!** FindShop was unable to find any shops. Read [here](" .. HELP_LINK .. ") about why this may be the case.", BOT_NAME, nil)
         elseif args[1] == "list" then
             local printResults = ""
 
-            for i = 1, #findshop.shops do
-                local shopLocation = "Unknown"
-                if (findshop.shops[i].info.location) then
-                    shopLocation = findshop.shops[i].info.location.coordinates[1] .. ", " .. findshop.shops[i].info.location.coordinates[3]
-                end
-
-                printResults = printResults .. "\n**" .. findshop.shops[i].info.name .. "** at `" .. shopLocation .. "`"
+            for _, shop in ipairs(findshop.shops) do
+                printResults = printResults .. "\n**" .. shop.info.name .. "** at `" .. genCoords(shop.info.location) .. "`"
             end
 
             chatbox.tell(user, "FindShop found the following shops: \n" .. printResults, BOT_NAME, nil)
         elseif args[1] == "stats" then
-            chatbox.tell(user, "We are currently tracking `" .. #findshop.shops .. "` shops, with `" .. #findshop.uniqueItems .. "` unique items.", BOT_NAME, nil)
+            chatbox.tell(user, "We are currently tracking `" .. #findshop.shops .. "` shops.", BOT_NAME, nil)
         else
-            print("[DEBUG] Searching for " .. args[1] .. "...")
+            print("Debug: Searching for " .. args[1] .. "...")
             results = {}
 
-            for i = 1, #findshop.shops do
-                for z = 1, #findshop.shops[i].items do
-                    if string.find(findshop.shops[i].items[z].item.name, args[1]) and (findshop.shops[i].items[z].shopBuysItem ~= true) then
+            for _, shop in ipairs(findshop.shops) do
+                for _, item in ipairs(shop.items) do
+                    if string.find(item.item.name, args[1]) and (item.shopBuysItem ~= true) then
                         priceKST = 0
-                        for y = 1, #findshop.shops[i].items[z].prices do
-                            if findshop.shops[i].items[z].prices[y].currency == "KST" then
-                                priceKST = findshop.shops[i].items[z].prices[y].value
+                        for _, price in ipairs(item.prices) do
+                            if price.currency == "KST" then
+                                priceKST = price.value
                                 break
                             end
                         end
 
-                        local shopLocation = "Unknown"
-                        if findshop.shops[i].info.location then
-                            shopLocation = findshop.shops[i].info.location.coordinates[1] .. ", " .. findshop.shops[i].info.location.coordinates[3]
-                        end
-
                         table.insert(results, {
                             shop = {
-                                name = findshop.shops[i].info.name,
-                                owner = findshop.shops[i].info.owner,
-                                location = shopLocation
+                                name = shop.info.name,
+                                owner = shop.info.owner,
+                                location = genCoords(shop.info.location)
                             },
                             price = priceKST,
-                            stock = findshop.shops[i].items[z].stock
+                            item = item
                         })
-                        break
                     end
                 end
             end
 
             if #results == 0 then
-                chatbox.tell(user, "**Error!** FindShop was unable to find any shops with the item: '" .. args[1] .. "'. Read [here](" .. HELP_LINK .. ") about why this may be the case.", BOT_NAME, nil)
+                chatbox.tell(user, "**Error!** FindShop was unable to find any shops with '`" .. args[1] .. "`'. Read [here](" .. HELP_LINK .. ") about why this may be the case.", BOT_NAME, nil)
             else
                 local printResults = ""
 
-                for i = 1, #results do
-                    printResults = printResults .. "\n&3" .. results[i].shop.name .. " &o&7(" .. results[i].shop.location .. ") &a" .. results[i].price .. " KST &fx" .. results[i].stock
+                for _, result in ipairs(results) do
+                    printResults = printResults .. "\n`" .. result.item.item.name .. "` at **" .. result.shop.name .. "** (`" .. result.shop.location .. "`) for `" .. result.price .. "` KST (`" .. result.item.stock .. "` in stock)"
                 end
 
-                chatbox.tell(user, "FindShop found the following: " .. printResults, BOT_NAME, nil, "format")
+                chatbox.tell(user, "Here's what we found for '`" .. args[1] .. "`': " .. printResults, BOT_NAME, nil)
             end
         end
      end
