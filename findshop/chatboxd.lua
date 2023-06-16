@@ -1,6 +1,6 @@
 --[[
     FindShop Chatbox Daemon
-    Copyright (C) 2023  slimit75
+    Copyright (C) 2023 slimit75
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -43,6 +43,7 @@ function genCoords(location)
     return shopLocation
 end
 
+findshop.infoLog("chatboxd", "Started chatboxd")
 while true do
     local event, user, command, args = os.pullEvent("command")
 
@@ -64,7 +65,7 @@ while true do
         elseif args[1] == "stats" then
             chatbox.tell(user, "We are currently tracking `" .. #findshop.shops .. "` shops.", BOT_NAME, nil)
         else
-            print("Debug: Searching for " .. args[1] .. "...")
+            findshop.infoLog("chatboxd", "Searching for " .. args[1] .. "...")
             results = {}
 
             for _, shop in ipairs(findshop.shops) do

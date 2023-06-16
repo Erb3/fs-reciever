@@ -1,6 +1,6 @@
 --[[
     FindShop
-    Copyright (C) 2023  slimit75
+    Copyright (C) 2023 slimit75
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,6 +15,18 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]--
+
+function infoLog(service, text)
+    local x, y = term.getCursorPos()
+    term.setCursorPos(1, y)
+    term.blit("[ INFO ]", "00333300", "ffffffff")
+    term.setCursorPos(10, y)
+    term.setTextColor(colors.lightGray)
+    term.write(service)
+    term.setTextColor(colors.white)
+    print(": " .. text)
+end
+infoLog("FindShop", "Starting FindShop")
 
 local fs_env = {
     term = term,
@@ -34,14 +46,14 @@ local fs_env = {
     math = math,
     textutils = textutils,
     colors = colors,
-    colours = colours,
     io = io,
     print = print,
     os = os,
     chatbox = chatbox,
     peripheral = peripheral,
     findshop = {
-        shops = {}
+        shops = {},
+        infoLog = infoLog
     }
 }
 
@@ -56,7 +68,6 @@ local function fs_run(filePath)
     end
     return xpcall(func, function(err) error(err) end)
 end
-
 
 parallel.waitForAny(
     function()
