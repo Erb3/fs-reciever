@@ -29,26 +29,39 @@ while true do
     local event, side, channel, replyChannel, message, distance = os.pullEvent("modem_message")
 
     -- Verify received message is valid
-    if (message.type == "ShopSync") then
+    if (message.type) and (message.type == "ShopSync") then
         -- Check to see if this shop already exists in the cache
         index = nil
-        for i = 1, #findshop.shops do
-            local coord = findshop.shops[i].info.location.coordinates
-            local scannedCoord = message.info.location.coordinates
+        for i, shop in ipairs(findshop.shops) do
+            if (shop.info.location) then
+                local coord = shop.info.location.coordinates
+                local scannedCoord = message.info.location.coordinates
 
-            local x_check = coord[1] == scannedCoord[1]
-            local y_check = coord[2] == scannedCoord[2]
-            local z_check = coord[3] == scannedCoord[3]
+                local x_check = coord[1] == scannedCoord[1]
+                local y_check = coord[2] == scannedCoord[2]
+                local z_check = coord[3] == scannedCoord[3]
 
-            if x_check and y_check and z_check then
-                index = i
-                break
+                if x_check and y_check and z_check then
+                    index = i
+                    break
+                end
+            else 
+                if (shop.info.name == message.info.name) then
+                    if (shop.info.owner) then
+                        if (shop.info.owner == message.info.owner) then
+                            index = i
+                        end
+                    else
+                        index = i
+                    end
+                end
             end
         end
 
         -- Add (updated?) shop to cache
         if index == nil then
             table.insert(findshop.shops, message)
+            print("Found new shop! " .. message.info.name)
         else
             findshop.shops[index] = message
         end
