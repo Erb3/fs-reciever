@@ -1,5 +1,5 @@
 --[[
-    ShopSync Monitor Daemon
+    FindShop Monitor Daemon
     Copyright (C) 2023  slimit75
 
     This program is free software: you can redistribute it and/or modify
@@ -20,21 +20,22 @@
 local modem = peripheral.wrap("top")
 modem.open(9773)
 
--- Global table to house the shops (will be accessed by findshopd)
-_G.shops = {}
+function checkIfExists(message)
+    
+end
 
 -- Loop to check for shops continously
-while true do 
+while true do
     local event, side, channel, replyChannel, message, distance = os.pullEvent("modem_message")
-    
+
     -- Verify received message is valid
     if (message.type == "ShopSync") then
         -- Check to see if this shop already exists in the cache
         index = nil
-        for i = 1, #_G.shops do
-            local coord = _G.shops[i].info.location.coordinates
+        for i = 1, #findshop.shops do
+            local coord = findshop.shops[i].info.location.coordinates
             local scannedCoord = message.info.location.coordinates
-            
+
             local x_check = coord[1] == scannedCoord[1]
             local y_check = coord[2] == scannedCoord[2]
             local z_check = coord[3] == scannedCoord[3]
@@ -44,12 +45,12 @@ while true do
                 break
             end
         end
-        
+
         -- Add (updated?) shop to cache
         if index == nil then
-            table.insert(_G.shops, message)
+            table.insert(findshop.shops, message)
         else
-            _G.shops[index] = message
+            findshop.shops[index] = message
         end
     end
 end
