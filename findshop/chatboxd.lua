@@ -48,6 +48,10 @@ while true do
     local event, user, command, args = os.pullEvent("command")
 
     if arrayContains(aliases, command) then
+        if (findshop.mx) then
+            chatbox.tell(user, "*WARNING: FindShop is in maintenance mode. Something is probably being added or debugged, so don't be surprised if anything breaks!*", BOT_NAME, nil)
+        end
+
         if (#args == 0) or (args[1] == "help") then
             chatbox.tell(user, "FindShop is a service to locate any shops buying or selling an item. We have a few subcommands, too: \n`\\fs list` - List detected shops\n`\\fs stats` - Statistics (currently only shop count)\n`\\fs <item>` - Finds *<item>*" , BOT_NAME, nil)
         elseif #args > 1 then
