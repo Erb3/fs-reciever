@@ -98,6 +98,16 @@ while true do
 
             if #results == 0 then
                 chatbox.tell(user, "**Error!** FindShop was unable to find any shops with '`" .. args[1] .. "`'. Read [here](" .. HELP_LINK .. ") about why this may be the case.", BOT_NAME, nil)
+            elseif #results >= 5 then
+                local printResults = ""
+
+                for i, result in ipairs(results) do
+                    if i <= 5 then
+                        printResults = printResults .. "\n`" .. result.item.item.name .. "` at **" .. result.shop.name .. "** (`" .. result.shop.location .. "`) for `" .. result.price .. "` KST (`" .. result.item.stock .. "` in stock)"
+                    end
+                end
+
+                chatbox.tell(user, "**Note:** Too many results found. Shorting the list to the first 5 results.\nHere's what we found for '`" .. args[1] .. "`': " .. printResults, BOT_NAME, nil)
             else
                 local printResults = ""
 
