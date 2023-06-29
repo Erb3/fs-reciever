@@ -33,7 +33,7 @@ end
 function genCoords(location)
     local shopLocation = "Unknown"
     if (location) then
-        if (location.coordinates) then
+        if (location.coordinates[1]) and (location.coordinates[3]) then
             shopLocation = location.coordinates[1] .. ", " .. location.coordinates[3]
         elseif (location.description) then
             shopLocation = "'" .. location.description .. "'"
