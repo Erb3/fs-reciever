@@ -21,16 +21,23 @@ local modem = peripheral.wrap("top")
 modem.open(9773)
 
 -- Read cache, if it exists
-local CACHE_FP = "/findshop/cache.json"
+local fetchReq = http.post(
+    findshop.api.endpoint .. "/action/find",
+    textutils.serializeJSON({
+        dataSource = "Cluster0",
+        database = "Main_DB",
+        collection = "Main DB",
+        filter = {}
+    }),
+    {
+      ["Content-Type"] = "application/json",
+      ["api-key"] = findshop.api.key
+    }
+)
 
-if fs.exists(CACHE_FP) then
-    local tempFile = fs.open(CACHE_FP, "r")
-    local cache = tempFile.readAll()
-    tempFile.close()
-
-    findshop.shops = textutils.unserializeJSON(cache)
-    findshop.infoLog("monitord", "Restored " .. #findshop.shops .. " shops from cache.")
-end
+local shopList = fetchReq.readAll()
+findshop.shops = textutils.unserializeJSON(shopList).documents
+findshop.infoLog("monitord", "Restored " .. #findshop.shops .. " shops from MongoDB.")
 
 -- Loop to check for shops continously
 findshop.infoLog("monitord", "Started monitord")
@@ -43,7 +50,8 @@ while true do
         index = nil
         message.findShop = {
             computerID = replyChannel,
-            shopIndex = message.info.multiShop
+            shopIndex = message.info.multiShop,
+            lastSeen = os.epoch("utc")
         }
         for i, shop in ipairs(findshop.shops) do
             if (message.findShop.computerID == shop.findShop.computerID) then
@@ -65,10 +73,41 @@ while true do
             findshop.infoLog("monitord", "Found new shop! " .. message.info.name)
 
             -- Write cache
-            local tempFile = fs.open(CACHE_FP, "w")
-            tempFile.write(textutils.serializeJSON(findshop.shops))
-            tempFile.close()
+            local data = {
+                dataSource = "Cluster0",
+                database = "Main_DB",
+                collection = "Main DB",
+                document = message
+            }
+
+            http.post(
+                findshop.api.endpoint .. "/action/insertOne",
+                textutils.serializeJSON(data),
+                {
+                    ["Content-Type"] = "application/json",
+                    ["api-key"] = findshop.api.key
+                }
+            )
         else
+            local data = {
+                dataSource = "Cluster0",
+                database = "Main_DB",
+                collection = "Main DB",
+                filter = { _id = { ["$oid"] = findshop.shops[index]._id } },
+                update = {
+                    ["$set"] = message
+                }
+            }
+
+            http.post(
+                findshop.api.endpoint .. "/action/updateOne",
+                textutils.serializeJSON(data),
+                {
+                    ["Content-Type"] = "application/json",
+                    ["api-key"] = findshop.api.key
+                }
+            )
+
             findshop.shops[index] = message
         end
     end

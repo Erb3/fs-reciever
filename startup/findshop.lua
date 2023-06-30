@@ -16,7 +16,15 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]--
 
-function infoLog(service, text)
+_G.findshop = {
+    shops = {},
+    api = {
+        endpoint = "https://us-east-1.aws.data.mongodb-api.com/app/data-wcgdk/endpoint/data/v1",
+        key = ""
+    }
+}
+
+function _G.findshop.infoLog(service, text)
     local x, y = term.getCursorPos()
     term.setCursorPos(1, y)
     term.blit("[ INFO ]", "00333300", "ffffffff")
@@ -26,44 +34,18 @@ function infoLog(service, text)
     term.setTextColor(colors.white)
     print(": " .. text)
 end
-infoLog("FindShop", "Starting FindShop")
+findshop.infoLog("FindShop", "Starting FindShop")
 
-local fs_env = {
-    term = term,
-    paintutils = paintutils,
-    next = next,
-    pairs = pairs,
-    ipairs = ipairs,
-    pcall = pcall,
-    select = select,
-    tonumber = tonumber,
-    tostring = tostring,
-    type = type,
-    unpack = unpack,
-    xpcall = xpcall,
-    string = string,
-    table = table,
-    math = math,
-    textutils = textutils,
-    colors = colors,
-    io = io,
-    print = print,
-    os = os,
-    fs = fs,
-    chatbox = chatbox,
-    peripheral = peripheral,
-    findshop = {
-        shops = {},
-        infoLog = infoLog
-    }
-}
+local tempFile = fs.open("/findshop/.MDB_API_KEY", "r")
+findshop.api.key = tempFile.readAll()
+tempFile.close()
 
 local function fs_run(filePath)
     local file = fs.open(filePath, "r")
     local code = file.readAll()
     file.close()
 
-    local func, msg = load(code, nil, 't', fs_env)
+    local func, msg = load(code, nil, 't', _G)
     if not func then
         return nil, msg
     end
