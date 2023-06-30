@@ -74,7 +74,7 @@ while true do
 
             for _, shop in ipairs(findshop.shops) do
                 for _, item in ipairs(shop.items) do
-                    if string.find(item.item.name, args[1]) and (item.shopBuysItem ~= true) then
+                    if string.find(item.item.name, args[1]) and (item.shopBuysItem ~= true) and (item.stock ~= 0) then
                         priceKST = 0
                         for _, price in ipairs(item.prices) do
                             if price.currency == "KST" then
