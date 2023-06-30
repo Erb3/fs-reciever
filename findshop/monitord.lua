@@ -41,28 +41,20 @@ while true do
     if (message.type) and (message.type == "ShopSync") then
         -- Check to see if this shop already exists in the cache
         index = nil
+        message.findShop = {
+            computerID = replyChannel,
+            shopIndex = message.info.multiShop
+        }
         for i, shop in ipairs(findshop.shops) do
-            if (message.info.location) and (shop.info.location) then
-                local coord = shop.info.location.coordinates
-                local scannedCoord = message.info.location.coordinates
-
-                local x_check = coord[1] == scannedCoord[1]
-                local y_check = coord[2] == scannedCoord[2]
-                local z_check = coord[3] == scannedCoord[3]
-
-                if x_check and y_check and z_check then
+            if (message.findShop.computerID == shop.findShop.computerID) then
+                if (message.findShop.shopIndex) then
+                    if (message.findShop.shopIndex == shop.findShop.shopIndex) then
+                        index = i
+                        break
+                    end
+                else
                     index = i
                     break
-                end
-            else
-                if (shop.info.name == message.info.name) then
-                    if (shop.info.owner) then
-                        if (shop.info.owner == message.info.owner) then
-                            index = i
-                        end
-                    else
-                        index = i
-                    end
                 end
             end
         end
