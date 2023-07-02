@@ -47,16 +47,16 @@ while true do
     -- Verify received message is valid
     if (message.type) and (message.type == "ShopSync") then
         -- Check to see if this shop already exists in the cache
-        index = nil
+        local index = nil
         message.findShop = {
             computerID = replyChannel,
             shopIndex = message.info.multiShop,
             lastSeen = os.epoch("utc")
         }
         for i, shop in ipairs(findshop.shops) do
-            if (message.findShop.computerID == shop.findShop.computerID) then
-                if (message.findShop.shopIndex) then
-                    if (message.findShop.shopIndex == shop.findShop.shopIndex) then
+            if message.findShop.computerID == shop.findShop.computerID then
+                if message.findShop.shopIndex then
+                    if message.findShop.shopIndex == shop.findShop.shopIndex then
                         index = i
                         break
                     end
@@ -73,35 +73,35 @@ while true do
             findshop.infoLog("monitord", "Found new shop! " .. message.info.name)
 
             -- Write cache
-            local data = {
-                dataSource = "Cluster0",
-                database = "Main_DB",
-                collection = "Main DB",
-                document = message
-            }
-
             http.post(
                 findshop.api.endpoint .. "/action/insertOne",
-                textutils.serializeJSON(data),
+                textutils.serializeJSON({
+                    dataSource = "Cluster0",
+                    database = "Main_DB",
+                    collection = "Main DB",
+                    document = message
+                }),
                 {
                     ["Content-Type"] = "application/json",
                     ["api-key"] = findshop.api.key
                 }
             )
         else
-            local data = {
-                dataSource = "Cluster0",
-                database = "Main_DB",
-                collection = "Main DB",
-                filter = { _id = { ["$oid"] = findshop.shops[index]._id } },
-                update = {
-                    ["$set"] = message
-                }
-            }
-
             http.post(
                 findshop.api.endpoint .. "/action/updateOne",
-                textutils.serializeJSON(data),
+                textutils.serializeJSON({
+                    dataSource = "Cluster0",
+                    database = "Main_DB",
+                    collection = "Main DB",
+                    filter = { 
+                        _id = { 
+                            ["$oid"] = findshop.shops[index]._id 
+                        } 
+                    },
+                    update = {
+                        ["$set"] = message
+                    }
+                }),
                 {
                     ["Content-Type"] = "application/json",
                     ["api-key"] = findshop.api.key

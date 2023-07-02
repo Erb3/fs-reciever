@@ -17,7 +17,7 @@
 ]]--
 
 local BOT_NAME = "&6&lFindShop"
-local HELP_LINK = "https://github.com/sc-sdc/FindShop/wiki/Why-can't-I-find-X-or-Why-isn't-my-shop-appearing%3F"
+local HELP_LINK = "https://github.com/slimit75/FindShop/wiki/Why-are-shops-and-items-missing%3F"
 local aliases = {"findshop", "fs", "find"}
 
 function arrayContains(array, value)
@@ -32,10 +32,10 @@ end
 
 function genCoords(location)
     local shopLocation = "Unknown"
-    if (location) then
-        if (location.coordinates) then
-            shopLocation = location.coordinates[1] .. ", " .. location.coordinates[3]
-        elseif (location.description) then
+    if location then
+        if location.coordinates then
+            shopLocation = location.coordinates[1] .. ", " .. location.coordinates[2].. ", " .. location.coordinates[3]
+        elseif location.description then
             shopLocation = location.description
         end
     end
@@ -48,16 +48,12 @@ while true do
     local event, user, command, args = os.pullEvent("command")
 
     if arrayContains(aliases, command) then
-        if (findshop.mx) then
-            chatbox.tell(user, "*WARNING: FindShop is in maintenance mode. Something is probably being added or debugged, so don't be surprised if anything breaks!*", BOT_NAME, nil)
-        end
-
-        if (#args == 0) or (args[1] == "help") then
+        if #args == 0 or args[1] == "help" then
             chatbox.tell(user, "FindShop is a service to locate any shops buying or selling an item. We have a few subcommands, too: \n`\\fs list` - List detected shops\n`\\fs stats` - Statistics (currently only shop count)\n`\\fs <item>` - Finds *<item>*" , BOT_NAME, nil)
         elseif #args > 1 then
-            chatbox.tell(user, "**Error!** FindShop does not currently support multiple search parameters.", BOT_NAME,  nil)
-        elseif findshop.shops == {} then
-            chatbox.tell(user, "**Error!** FindShop was unable to find any shops. Read [here](" .. HELP_LINK .. ") about why this may be the case.", BOT_NAME, nil)
+            chatbox.tell(user, "**Error!** FindShop does not currently support multiple search parameters.", BOT_NAME, nil)
+        elseif #findshop.shops == 0 then
+            chatbox.tell(user, "**Error!** FindShop was unable to find any shops. Something has to be seriously wrong.", BOT_NAME, nil)
         elseif args[1] == "list" then
             local printResults = ""
 
@@ -74,7 +70,7 @@ while true do
 
             for _, shop in ipairs(findshop.shops) do
                 for _, item in ipairs(shop.items) do
-                    if string.find(item.item.name, args[1]) and (item.shopBuysItem ~= true) and (item.stock ~= 0) then
+                    if string.find(item.item.name, args[1]) and not item.shopBuysItem and (item.stock ~= 0 or item.madeOnDemand) then
                         priceKST = 0
                         for _, price in ipairs(item.prices) do
                             if price.currency == "KST" then
@@ -97,7 +93,7 @@ while true do
             end
 
             if #results == 0 then
-                chatbox.tell(user, "**Error!** FindShop was unable to find any shops with '`" .. args[1] .. "`'. Read [here](" .. HELP_LINK .. ") about why this may be the case.", BOT_NAME, nil)
+                chatbox.tell(user, "**Error!** FindShop was unable to find any shops with '`" .. args[1] .. "`' in stock. [Why are shops and items missing?](" .. HELP_LINK .. ")", BOT_NAME, nil)
             elseif #results >= 5 then
                 local printResults = ""
 
