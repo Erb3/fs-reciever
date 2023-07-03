@@ -1,4 +1,4 @@
---[[
+ --[[
     FindShop Chatbox Daemon
     Copyright (C) 2023 slimit75
 
@@ -18,7 +18,6 @@
 
 local BOT_NAME = "&6&lFindShop"
 local HELP_LINK = "https://github.com/slimit75/FindShop/wiki/Why-are-shops-and-items-missing%3F"
-local aliases = {"findshop", "fs", "find"}
 
 function arrayContains(array, value)
     for i, item in ipairs(array) do
@@ -47,14 +46,12 @@ findshop.infoLog("chatboxd", "Started chatboxd")
 while true do
     local event, user, command, args = os.pullEvent("command")
 
-    if arrayContains(aliases, command) then
+    if arrayContains({"findshop", "fs", "find"}, command) then
         if #args == 0 or args[1] == "help" then
-            chatbox.tell(user, "FindShop is a service to locate any shops buying or selling an item. We have a few subcommands, too: \n`\\fs list` - List detected shops\n`\\fs stats` - Statistics (currently only shop count)\n`\\fs <item>` - Finds *<item>*" , BOT_NAME, nil)
-        elseif #args > 1 then
-            chatbox.tell(user, "**Error!** FindShop does not currently support multiple search parameters.", BOT_NAME, nil)
+            chatbox.tell(user, "FindShop is a service to locate any shops buying or selling an item. We have a few subcommands, too: \n`\\fs list` - List detected shops\n`\\fs stats` - Statistics (currently only shop count)\n`\\fs item <item>` - Finds *<item>*" , BOT_NAME, nil)
         elseif #findshop.shops == 0 then
             chatbox.tell(user, "**Error!** FindShop was unable to find any shops. Something has to be seriously wrong.", BOT_NAME, nil)
-        elseif args[1] == "list" then
+        elseif args[1] == "list" or args[1] == "l" then
             local printResults = ""
 
             for _, shop in ipairs(findshop.shops) do
@@ -64,13 +61,17 @@ while true do
             chatbox.tell(user, "FindShop found the following shops: \n" .. printResults, BOT_NAME, nil)
         elseif args[1] == "stats" then
             chatbox.tell(user, "We are currently tracking `" .. #findshop.shops .. "` shops.", BOT_NAME, nil)
-        else
-            findshop.infoLog("chatboxd", "Searching for " .. args[1] .. "...")
+        elseif args[1] == "item" or args[1] == "i" or #args == 1 then
+            search_item = args[1]
+            if #args > 1 then
+                search_item = args[2]
+            end
+            findshop.infoLog("chatboxd", "Searching for '" .. search_item .. "''...")
             results = {}
 
             for _, shop in ipairs(findshop.shops) do
                 for _, item in ipairs(shop.items) do
-                    if string.find(item.item.name, args[1]) and not item.shopBuysItem and (item.stock ~= 0 or item.madeOnDemand) then
+                    if (string.find(item.item.name:lower(), search_item:lower()) or string.find(item.item.displayName:lower(), search_item:lower())) and (not item.shopBuysItem) and (item.stock ~= 0 or item.madeOnDemand) then
                         priceKST = 0
                         for _, price in ipairs(item.prices) do
                             if price.currency == "KST" then
@@ -93,7 +94,7 @@ while true do
             end
 
             if #results == 0 then
-                chatbox.tell(user, "**Error!** FindShop was unable to find any shops with '`" .. args[1] .. "`' in stock. [Why are shops and items missing?](" .. HELP_LINK .. ")", BOT_NAME, nil)
+                chatbox.tell(user, "**Error!** FindShop was unable to find any shops with '`" .. search_item .. "`' in stock. [Why are shops and items missing?](" .. HELP_LINK .. ")", BOT_NAME, nil)
             elseif #results >= 5 then
                 local printResults = ""
 
@@ -103,7 +104,7 @@ while true do
                     end
                 end
 
-                chatbox.tell(user, "**Note:** Too many results found. Shorting the list to the first 5 results.\nHere's what we found for '`" .. args[1] .. "`': " .. printResults, BOT_NAME, nil)
+                chatbox.tell(user, "**Note:** Too many results found. Shorting the list to the first 5 results.\nHere's what we found for '`" .. search_item .. "`': " .. printResults, BOT_NAME, nil)
             else
                 local printResults = ""
 
@@ -111,7 +112,7 @@ while true do
                     printResults = printResults .. "\n`" .. result.item.item.name .. "` at **" .. result.shop.name .. "** (`" .. result.shop.location .. "`) for `" .. result.price .. "` KST (`" .. result.item.stock .. "` in stock)"
                 end
 
-                chatbox.tell(user, "Here's what we found for '`" .. args[1] .. "`': " .. printResults, BOT_NAME, nil)
+                chatbox.tell(user, "Here's what we found for '`" .. search_item .. "`': " .. printResults, BOT_NAME, nil)
             end
         end
      end
