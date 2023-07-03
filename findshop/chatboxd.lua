@@ -48,7 +48,7 @@ while true do
 
     if arrayContains({"findshop", "fs", "find"}, command) then
         if #args == 0 or args[1] == "help" then
-            chatbox.tell(user, "FindShop is a service to locate any shops buying or selling an item. We have a few subcommands, too: \n`\\fs list` - List detected shops\n`\\fs stats` - Statistics (currently only shop count)\n`\\fs item <item>` - Finds *<item>*" , BOT_NAME, nil)
+            chatbox.tell(user, "FindShop is a service to locate any shops buying or selling an item. We have a few subcommands, too: \n`\\fs list` - List detected shops\n`\\fs stats` - Statistics (currently only shop count)\n`\\fs buy <item>` - Finds shops selling *<item>*\n`\\fs sell <item>` - Finds shops buying *<item>*" , BOT_NAME, nil)
         elseif #findshop.shops == 0 then
             chatbox.tell(user, "**Error!** FindShop was unable to find any shops. Something has to be seriously wrong.", BOT_NAME, nil)
         elseif args[1] == "list" or args[1] == "l" then
@@ -61,13 +61,13 @@ while true do
             chatbox.tell(user, "FindShop found the following shops: \n" .. printResults, BOT_NAME, nil)
         elseif args[1] == "stats" then
             chatbox.tell(user, "We are currently tracking `" .. #findshop.shops .. "` shops.", BOT_NAME, nil)
-        elseif args[1] == "item" or args[1] == "i" or #args == 1 then
+        elseif args[1] == "buy" or args[1] == "b" or #args == 1 then
             search_item = args[1]
             if #args > 1 then
                 search_item = args[2]
             end
-            findshop.infoLog("chatboxd", "Searching for '" .. search_item .. "''...")
-            results = {}
+            findshop.infoLog("chatboxd", "Searching for a shop with '" .. search_item .. "''...")
+            local results = {}
 
             for _, shop in ipairs(findshop.shops) do
                 for _, item in ipairs(shop.items) do
@@ -76,6 +76,11 @@ while true do
                         for _, price in ipairs(item.prices) do
                             if price.currency == "KST" then
                                 priceKST = price.value
+
+                                if (item.dynamicPrice) then
+                                    priceKST = priceKST .. "*"
+                                end
+
                                 break
                             end
                         end
@@ -95,21 +100,76 @@ while true do
 
             if #results == 0 then
                 chatbox.tell(user, "**Error!** FindShop was unable to find any shops with '`" .. search_item .. "`' in stock. [Why are shops and items missing?](" .. HELP_LINK .. ")", BOT_NAME, nil)
-            elseif #results >= 5 then
+            else
                 local printResults = ""
 
-                for i, result in ipairs(results) do
-                    if i <= 5 then
+                if #results >= 5 then
+                    for i, result in ipairs(results) do
+                        if i <= 5 then
+                            printResults = printResults .. "\n`" .. result.item.item.name .. "` at **" .. result.shop.name .. "** (`" .. result.shop.location .. "`) for `" .. result.price .. "` KST (`" .. result.item.stock .. "` in stock)"
+                        end
+                    end
+
+                    chatbox.tell(user, "**Note:** Too many results found. Shorting the list to the first 5 results.")
+                else
+                    for _, result in ipairs(results) do
                         printResults = printResults .. "\n`" .. result.item.item.name .. "` at **" .. result.shop.name .. "** (`" .. result.shop.location .. "`) for `" .. result.price .. "` KST (`" .. result.item.stock .. "` in stock)"
                     end
                 end
 
-                chatbox.tell(user, "**Note:** Too many results found. Shorting the list to the first 5 results.\nHere's what we found for '`" .. search_item .. "`': " .. printResults, BOT_NAME, nil)
+                chatbox.tell(user, "Here's what we found for '`" .. search_item .. "`': " .. printResults, BOT_NAME, nil)
+            end
+        elseif args[1] == "sell" or args[1] == "sl" then
+            search_item = args[2]
+            findshop.infoLog("chatboxd", "Searching for a sellshop with '" .. search_item .. "''...")
+            local results = {}
+
+            for _, shop in ipairs(findshop.shops) do
+                for _, item in ipairs(shop.items) do
+                    if (string.find(item.item.name:lower(), search_item:lower()) or string.find(item.item.displayName:lower(), search_item:lower())) and (item.shopBuysItem) then
+                        priceKST = 0
+                        for _, price in ipairs(item.prices) do
+                            if price.currency == "KST" then
+                                priceKST = price.value
+
+                                if (item.dynamicPrice) then
+                                    priceKST = priceKST .. "*"
+                                end
+
+                                break
+                            end
+                        end
+
+                        table.insert(results, {
+                            shop = {
+                                name = shop.info.name,
+                                owner = shop.info.owner,
+                                location = genCoords(shop.info.location)
+                            },
+                            price = priceKST,
+                            item = item
+                        })
+                    end
+                end
+            end
+
+            if #results == 0 then
+                chatbox.tell(user, "**Error!** FindShop was unable to find any shops with '`" .. search_item .. "`' in stock. [Why are shops and items missing?](" .. HELP_LINK .. ")", BOT_NAME, nil)
             else
                 local printResults = ""
 
-                for _, result in ipairs(results) do
-                    printResults = printResults .. "\n`" .. result.item.item.name .. "` at **" .. result.shop.name .. "** (`" .. result.shop.location .. "`) for `" .. result.price .. "` KST (`" .. result.item.stock .. "` in stock)"
+                if #results >= 5 then
+                    for i, result in ipairs(results) do
+                        if i <= 5 then
+                            printResults = printResults .. "\n`" .. result.item.item.name .. "` at **" .. result.shop.name .. "** (`" .. result.shop.location .. "`) for `" .. result.price .. "` KST"
+                        end
+                    end
+
+                    chatbox.tell(user, "**Note:** Too many results found. Shorting the list to the first 5 results.")
+                else
+                    for _, result in ipairs(results) do
+                        printResults = printResults .. "\n`" .. result.item.item.name .. "` at **" .. result.shop.name .. "** (`" .. result.shop.location .. "`) for `" .. result.price .. "` KST"
+                    end
                 end
 
                 chatbox.tell(user, "Here's what we found for '`" .. search_item .. "`': " .. printResults, BOT_NAME, nil)
