@@ -1,4 +1,4 @@
- --[[
+--[[
     FindShop Chatbox Daemon
     Copyright (C) 2023 slimit75
 
@@ -48,7 +48,7 @@ while true do
 
     if arrayContains({"findshop", "fs", "find"}, command) then
         if #args == 0 or args[1] == "help" then
-            chatbox.tell(user, "FindShop is a service to locate any shops buying or selling an item. We have a few subcommands, too: \n`\\fs list` - List detected shops\n`\\fs stats` - Statistics (currently only shop count)\n`\\fs buy <item>` - Finds shops selling *<item>*\n`\\fs sell <item>` - Finds shops buying *<item>*" , BOT_NAME, nil)
+            chatbox.tell(user, "FindShop is a service to locate any shops buying or selling an item. We have a few subcommands, too: \n`\\fs list` - List detected shops\n`\\fs stats` - Statistics (currently only shop count)\n`\\fs buy <item>` - Finds shops selling *<item>*\n`\\fs sell <item>` - Finds shops buying *<item>*\n`\\fs shop <name>` - Finds shops named *<name>* and their info" , BOT_NAME, nil)
         elseif #findshop.shops == 0 then
             chatbox.tell(user, "**Error!** FindShop was unable to find any shops. Something has to be seriously wrong.", BOT_NAME, nil)
         elseif args[1] == "list" or args[1] == "l" then
@@ -173,6 +173,73 @@ while true do
                 end
 
                 chatbox.tell(user, "Here's what we found for '`" .. search_item .. "`': " .. printResults, BOT_NAME, nil)
+            end
+        elseif args[1] == "shop" or args[1] == "sh" then
+            search_name = args[2]
+            findshop.infoLog("chatboxd", "Searching for a shop named '" .. search_name .. "''...")
+            local results = {}
+
+            for _, shop in ipairs(findshop.shops) do
+                if string.find(shop.info.name:lower(), search_name:lower()) then
+                    table.insert(results, shop)
+                end
+            end
+
+            if #results == 0 then
+                chatbox.tell(user, "**Error!** FindShop was unable to find any shops named '`" .. search_name .. "`'. [Why are shops and items missing?](" .. HELP_LINK .. ")", BOT_NAME, nil)
+            else
+                local printResults = ""
+
+                if (#results > 1 and not args[3]) or (args[3] and (tonumber(args[3]) > #results)) then
+                    for i, result in ipairs(results) do
+                        printResults = printResults .. "\n(`" .. i .. "`) " .. result.info.name
+                    end
+
+                    chatbox.tell(user, "Multiple shops were found. Run `\\fs sh " .. search_name .. " <number>` to see specific information." .. printResults)
+                else
+                    display_shop_idx = 1
+                    if args[3] then
+                        display_shop_idx = tonumber(args[3])
+                    end
+
+                    display_shop = results[display_shop_idx]
+
+                    printResults = "**" .. display_shop.info.name .. "**"
+
+                    if (display_shop.info.owner) then
+                        printResults = printResults .. " *by " .. display_shop.info.owner .. "*"
+                    end
+
+                    printResults = printResults .. "\n"
+
+                    if (display_shop.info.location) then
+                        printResults = printResults .. "Located at `" .. genCoords(display_shop.info.location) .. "`"
+
+                        if (display_shop.info.location.dimension) then
+                            printResults = printResults .. " in the `" .. display_shop.info.location.dimension .. "`"
+                        end
+
+                        if (display_shop.info.otherLocations) then
+                            printResults = printResults .. " + `" .. #display_shop.info.otherLocations .. "` other locations"
+                        end
+
+                        printResults = printResults .. "\n"
+                    end
+
+                    if (display_shop.info.software) then
+                        printResults = printResults .. "Running `" .. display_shop.info.software.name .. "`"
+
+                        if (display_shop.info.software.version) then
+                            printResults = printResults .. " v`" .. display_shop.info.software.version .. "`"
+                        end
+
+                        printResults = printResults .. "\n"
+                    end
+
+                    printResults = printResults .. "Selling `" .. #display_shop.items .. "` items"
+
+                    chatbox.tell(user, printResults)
+                end
             end
         end
      end
