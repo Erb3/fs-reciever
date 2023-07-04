@@ -176,7 +176,7 @@ while true do
             end
         elseif args[1] == "shop" or args[1] == "sh" then
             search_name = args[2]
-            findshop.infoLog("chatboxd", "Searching for a shop named '" .. search_name .. "''...")
+            findshop.infoLog("chatboxd", "Searching for a shop named '" .. search_name .. "'...")
             local results = {}
 
             for _, shop in ipairs(findshop.shops) do

@@ -55,6 +55,12 @@ while true do
             shopIndex = message.info.multiShop,
             lastSeen = os.epoch("utc")
         }
+
+        -- Support for ShopSync >=1.1 computerID field
+        if message.info.computerID then
+            message.findShop.computerID = message.info.computerID
+        end
+
         for i, shop in ipairs(findshop.shops) do
             if message.findShop.computerID == shop.findShop.computerID then
                 if message.findShop.shopIndex then
