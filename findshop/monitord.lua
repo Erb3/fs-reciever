@@ -36,6 +36,8 @@ local fetchReq = http.post(
 )
 
 local shopList = fetchReq.readAll()
+fetchReq.close()
+
 findshop.shops = textutils.unserializeJSON(shopList).documents
 findshop.infoLog("monitord", "Restored " .. #findshop.shops .. " shops from MongoDB.")
 
@@ -73,7 +75,7 @@ while true do
             findshop.infoLog("monitord", "Found new shop! " .. message.info.name)
 
             -- Write cache
-            http.post(
+            local postReq = http.post(
                 findshop.api.endpoint .. "/action/insertOne",
                 textutils.serializeJSON({
                     dataSource = "Cluster0",
@@ -86,8 +88,9 @@ while true do
                     ["api-key"] = findshop.api.key
                 }
             )
+            postReq.close()
         else
-            http.post(
+            local postReq = http.post(
                 findshop.api.endpoint .. "/action/updateOne",
                 textutils.serializeJSON({
                     dataSource = "Cluster0",
@@ -107,6 +110,7 @@ while true do
                     ["api-key"] = findshop.api.key
                 }
             )
+            postReq.close()
 
             findshop.shops[index] = message
         end
