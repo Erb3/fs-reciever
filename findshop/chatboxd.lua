@@ -66,12 +66,15 @@ while true do
             if #args > 1 then
                 search_item = args[2]
             end
-            findshop.infoLog("chatboxd", "Searching for a shop with '" .. search_item .. "''...")
+            findshop.infoLog("chatboxd", "Searching for a shop with '" .. search_item .. "'...")
             local results = {}
 
             for _, shop in ipairs(findshop.shops) do
                 for _, item in ipairs(shop.items) do
-                    if (string.find(item.item.name:lower(), search_item:lower()) or string.find(item.item.displayName:lower(), search_item:lower())) and (not item.shopBuysItem) and (item.stock ~= 0 or item.madeOnDemand) then
+                    if not item.item.name then
+                        -- Radon allows broadcasts missing the items[i].item.name field. Why???
+                        findshop.infoLog("chatboxd", "Shop missing item name! " .. shop.info.name)
+                    elseif (string.find(item.item.name:lower(), search_item:lower()) or string.find(item.item.displayName:lower(), search_item:lower())) and (not item.shopBuysItem) and (item.stock ~= 0 or item.madeOnDemand) then
                         priceKST = 0
                         for _, price in ipairs(item.prices) do
                             if price.currency == "KST" then
@@ -121,12 +124,15 @@ while true do
             end
         elseif args[1] == "sell" or args[1] == "sl" then
             search_item = args[2]
-            findshop.infoLog("chatboxd", "Searching for a sellshop with '" .. search_item .. "''...")
+            findshop.infoLog("chatboxd", "Searching for a sellshop with '" .. search_item .. "'...")
             local results = {}
 
             for _, shop in ipairs(findshop.shops) do
                 for _, item in ipairs(shop.items) do
-                    if (string.find(item.item.name:lower(), search_item:lower()) or string.find(item.item.displayName:lower(), search_item:lower())) and (item.shopBuysItem) then
+                    if not item.item.name then
+                        -- Radon allows broadcasts missing the items[i].item.name field. Why???
+                        findshop.infoLog("chatboxd", "Shop missing item name! " .. shop.info.name)
+                    elseif (string.find(item.item.name:lower(), search_item:lower()) or string.find(item.item.displayName:lower(), search_item:lower())) and (item.shopBuysItem) then
                         priceKST = 0
                         for _, price in ipairs(item.prices) do
                             if price.currency == "KST" then
