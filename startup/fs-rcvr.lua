@@ -1,5 +1,5 @@
 --[[
-    FindShop Monitor Daemon
+    FindShop Reciever Server
     Copyright (C) 2023 slimit75
 
     This program is free software: you can redistribute it and/or modify
@@ -15,6 +15,18 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]--
+
+-- Fetch the MongoDB API key
+findshop = {
+    shops = {},
+    api = {
+        endpoint = "https://us-east-1.aws.data.mongodb-api.com/app/data-wcgdk/endpoint/data/v1",
+        key = ""
+    }
+}
+local tempFile = fs.open("/.MDB_API_KEY", "r")
+findshop.api.key = tempFile.readAll()
+tempFile.close()
 
 -- Load & open modem to ShopSync channel
 local modem = peripheral.wrap("top")
@@ -34,15 +46,13 @@ local fetchReq = http.post(
       ["api-key"] = findshop.api.key
     }
 )
-
 local shopList = fetchReq.readAll()
 fetchReq.close()
-
 findshop.shops = textutils.unserializeJSON(shopList).documents
-findshop.infoLog("monitord", "Restored " .. #findshop.shops .. " shops from MongoDB.")
+print("Restored " .. #findshop.shops .. " shops from MongoDB.")
 
 -- Loop to check for shops continously
-findshop.infoLog("monitord", "Started monitord")
+print("Started FindShop Reciever Server")
 while true do
     local event, side, channel, replyChannel, message, distance = os.pullEvent("modem_message")
 
@@ -78,7 +88,7 @@ while true do
         -- Add (updated?) shop to cache
         if index == nil then
             table.insert(findshop.shops, message)
-            findshop.infoLog("monitord", "Found new shop! " .. message.info.name)
+            print("Found new shop! " .. message.info.name)
 
             -- Write cache
             local postReq = http.post(
