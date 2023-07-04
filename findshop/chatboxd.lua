@@ -60,7 +60,7 @@ while true do
 
             chatbox.tell(user, "FindShop found the following shops: \n" .. printResults, BOT_NAME, nil)
         elseif args[1] == "stats" then
-            chatbox.tell(user, "We are currently tracking `" .. #findshop.shops .. "` shops.", BOT_NAME, nil)
+            chatbox.tell(user, "Detailed shop statistics can be viewed [here](https://charts.mongodb.com/charts-findshop-lwmvk/public/dashboards/649f2873-58ae-45ef-8079-03201394a531).", BOT_NAME, nil)
         elseif args[1] == "buy" or args[1] == "b" or #args == 1 then
             search_item = args[1]
             if #args > 1 then
