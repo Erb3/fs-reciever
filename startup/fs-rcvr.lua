@@ -85,6 +85,18 @@ while true do
             end
         end
 
+        -- Specific exception for 'infinite prices' coming from umnikos.kst
+        -- This took me 4 hours to diagnose and fix
+        if (message.info.name) == "umnikos.kst" then
+            for i in ipairs(message.items) do
+                for v in ipairs(message.items[i].prices) do
+                    if (message.items[i].prices[v].value == 1/0) then
+                        message.items[i].prices[v].value = 0
+                    end
+                end
+            end
+        end
+
         -- Add (updated?) shop to cache
         if index == nil then
             table.insert(findshop.shops, message)
