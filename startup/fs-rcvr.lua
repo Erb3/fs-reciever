@@ -118,29 +118,31 @@ while true do
             )
             postReq.close()
         else
-            local postReq = http.post(
-                findshop.api.endpoint .. "/action/updateOne",
-                textutils.serializeJSON({
-                    dataSource = "Cluster0",
-                    database = "Main_DB",
-                    collection = "Main DB",
-                    filter = { 
-                        _id = { 
-                            ["$oid"] = findshop.shops[index]._id 
-                        } 
-                    },
-                    update = {
-                        ["$set"] = message
+            if (findshop.shops[index].findShop.lastSeen - message.findShop.lastSeen) > 30 then
+                local postReq = http.post(
+                    findshop.api.endpoint .. "/action/updateOne",
+                    textutils.serializeJSON({
+                        dataSource = "Cluster0",
+                        database = "Main_DB",
+                        collection = "Main DB",
+                        filter = {
+                            _id = {
+                                ["$oid"] = findshop.shops[index]._id
+                            }
+                        },
+                        update = {
+                            ["$set"] = message
+                        }
+                    }),
+                    {
+                        ["Content-Type"] = "application/json",
+                        ["api-key"] = findshop.api.key
                     }
-                }),
-                {
-                    ["Content-Type"] = "application/json",
-                    ["api-key"] = findshop.api.key
-                }
-            )
-            postReq.close()
+                )
+                postReq.close()
 
-            findshop.shops[index] = message
+                findshop.shops[index] = message
+            end
         end
     end
 end
