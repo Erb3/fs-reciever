@@ -118,7 +118,7 @@ while true do
             )
             postReq.close()
         else
-            if (findshop.shops[index].findShop.lastSeen - message.findShop.lastSeen) > 30 then
+            if (message.findShop.lastSeen - findshop.shops[index].findShop.lastSeen) > (30 * 1000) then
                 local postReq = http.post(
                     findshop.api.endpoint .. "/action/updateOne",
                     textutils.serializeJSON({
