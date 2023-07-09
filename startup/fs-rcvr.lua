@@ -28,6 +28,10 @@ local tempFile = fs.open("/.MDB_API_KEY", "r")
 findshop.api.key = tempFile.readAll()
 tempFile.close()
 
+dbSource = "Cluster0"
+dbName = "SC3"
+dbCollection = "RawShops"
+
 -- Load & open modem to ShopSync channel
 local modem = peripheral.wrap("top")
 modem.open(9773)
@@ -36,9 +40,9 @@ modem.open(9773)
 local fetchReq = http.post(
     findshop.api.endpoint .. "/action/find",
     textutils.serializeJSON({
-        dataSource = "Cluster0",
-        database = "Main_DB",
-        collection = "Main DB",
+        dataSource = dbSource,
+        database = dbName,
+        collection = dbCollection,
         filter = {}
     }),
     {
@@ -48,7 +52,9 @@ local fetchReq = http.post(
 )
 local shopList = fetchReq.readAll()
 fetchReq.close()
-findshop.shops = textutils.unserializeJSON(shopList).documents
+for _, shop in ipairs(textutils.unserializeJSON(shopList).documents) do
+    table.insert(findshop.shops, shop)
+end
 print("Restored " .. #findshop.shops .. " shops from MongoDB.")
 
 -- Loop to check for shops continously
@@ -106,9 +112,9 @@ while true do
             local postReq = http.post(
                 findshop.api.endpoint .. "/action/insertOne",
                 textutils.serializeJSON({
-                    dataSource = "Cluster0",
-                    database = "Main_DB",
-                    collection = "Main DB",
+                    dataSource = dbSource,
+                    database = dbName,
+                    collection = dbCollection,
                     document = message
                 }),
                 {
@@ -122,9 +128,9 @@ while true do
                 local postReq = http.post(
                     findshop.api.endpoint .. "/action/updateOne",
                     textutils.serializeJSON({
-                        dataSource = "Cluster0",
-                        database = "Main_DB",
-                        collection = "Main DB",
+                        dataSource = dbSource,
+                        database = dbName,
+                        collection = dbCollection,
                         filter = {
                             _id = {
                                 ["$oid"] = findshop.shops[index]._id
