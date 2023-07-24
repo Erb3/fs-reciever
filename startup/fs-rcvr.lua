@@ -17,7 +17,7 @@
 ]]--
 
 -- Post the updated shop to MongoDB
-function post_shop(message)
+function post_shop(message, replyChannel)
     -- Verify received message is valid
     if (message.type) and (message.type == "ShopSync") then
         -- Check to see if this shop already exists in the cache
@@ -161,5 +161,5 @@ print("Started FindShop Reciever Server")
 while true do
     local event, side, channel, replyChannel, message, distance = os.pullEvent("modem_message")
 
-    xpcall(post_shop, err_hndlr, message)
+    xpcall(post_shop, err_hndlr, message, replyChannel)
 end
