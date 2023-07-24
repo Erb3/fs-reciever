@@ -16,52 +16,8 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]--
 
--- Fetch the MongoDB API key
-findshop = {
-    shops = {},
-    api = {
-        endpoint = "https://us-east-1.aws.data.mongodb-api.com/app/data-wcgdk/endpoint/data/v1",
-        key = ""
-    }
-}
-local tempFile = fs.open("/.MDB_API_KEY", "r")
-findshop.api.key = tempFile.readAll()
-tempFile.close()
-
-dbSource = "Cluster0"
-dbName = "SC3"
-dbCollection = "RawShops"
-
--- Load & open modem to ShopSync channel
-local modem = peripheral.wrap("top")
-modem.open(9773)
-
--- Read cache, if it exists
-local fetchReq = http.post(
-    findshop.api.endpoint .. "/action/find",
-    textutils.serializeJSON({
-        dataSource = dbSource,
-        database = dbName,
-        collection = dbCollection,
-        filter = {}
-    }),
-    {
-      ["Content-Type"] = "application/json",
-      ["api-key"] = findshop.api.key
-    }
-)
-local shopList = fetchReq.readAll()
-fetchReq.close()
-for _, shop in ipairs(textutils.unserializeJSON(shopList).documents) do
-    table.insert(findshop.shops, shop)
-end
-print("Restored " .. #findshop.shops .. " shops from MongoDB.")
-
--- Loop to check for shops continously
-print("Started FindShop Reciever Server")
-while true do
-    local event, side, channel, replyChannel, message, distance = os.pullEvent("modem_message")
-
+-- Post the updated shop to MongoDB
+function post_shop(message)
     -- Verify received message is valid
     if (message.type) and (message.type == "ShopSync") then
         -- Check to see if this shop already exists in the cache
@@ -151,4 +107,59 @@ while true do
             end
         end
     end
+end
+
+-- Error handler
+function err_hndlr(err) 
+    term.blit("ERROR: ","fffff8f","eeeeeff")
+    print(err)
+end
+
+-- Fetch the MongoDB API key
+findshop = {
+    shops = {},
+    api = {
+        endpoint = "https://us-east-1.aws.data.mongodb-api.com/app/data-wcgdk/endpoint/data/v1",
+        key = ""
+    }
+}
+local tempFile = fs.open("/.MDB_API_KEY", "r")
+findshop.api.key = tempFile.readAll()
+tempFile.close()
+
+dbSource = "Cluster0"
+dbName = "SC3"
+dbCollection = "RawShops"
+
+-- Load & open modem to ShopSync channel
+local modem = peripheral.wrap("top")
+modem.open(9773)
+
+-- Read cache, if it exists
+local fetchReq = http.post(
+    findshop.api.endpoint .. "/action/find",
+    textutils.serializeJSON({
+        dataSource = dbSource,
+        database = dbName,
+        collection = dbCollection,
+        filter = {}
+    }),
+    {
+      ["Content-Type"] = "application/json",
+      ["api-key"] = findshop.api.key
+    }
+)
+local shopList = fetchReq.readAll()
+fetchReq.close()
+for _, shop in ipairs(textutils.unserializeJSON(shopList).documents) do
+    table.insert(findshop.shops, shop)
+end
+print("Restored " .. #findshop.shops .. " shops from MongoDB.")
+
+-- Loop to check for shops continously
+print("Started FindShop Reciever Server")
+while true do
+    local event, side, channel, replyChannel, message, distance = os.pullEvent("modem_message")
+
+    xpcall(post_shop, err_hndlr, message)
 end
