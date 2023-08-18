@@ -135,20 +135,6 @@ dbCollection = "RawShops"
 local modem = peripheral.wrap("top")
 modem.open(9773)
 
--- Print last update
-shell.run("clear")
-function printHeader()
-	paintutils.drawLine(1, 1, 60, 1, colors.lightGray)
-	local cacheX, cacheY = term.getCursorPos()
-	term.setCursorPos(1, 1)
-	term.setBackgroundColor(colors.lightGray)
-	term.setTextColor(colors.white)
-	term.write(os.date())
-	term.setBackgroundColor(colors.black)
-	term.setCursorPos(cacheX, cacheY)
-end
-printHeader()
-
 -- Read cache, if it exists
 local fetchReq = http.post(
 	findshop.api.endpoint .. "/action/find",
@@ -176,5 +162,4 @@ while true do
 	local event, side, channel, replyChannel, message, distance = os.pullEvent("modem_message")
 
 	xpcall(post_shop, err_hndlr, message, replyChannel)
-	printHeader()
 end
